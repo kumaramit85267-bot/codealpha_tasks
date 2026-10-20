@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud Photo Gallery | CodeAlpha Project</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">☁</span><div><strong>CloudPix</strong><small>Cloud Photo Gallery</small></div></div>
+    <span class="status">{{ storage_mode }}</span>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">CODEALPHA · CLOUD COMPUTING</p>
+      <h1>Your memories,<br><span>stored in the cloud.</span></h1>
+      <p class="intro">Upload and manage your photos in one simple gallery powered by Amazon S3.</p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="messages">
+          {% for category, message in messages %}
+            <div class="notice {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="upload-card">
+      <div>
+        <h2>Upload a photo</h2>
+        <p>PNG, JPG, JPEG, GIF or WEBP · Maximum 8 MB</p>
+      </div>
+      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+        <label class="file-picker"><input type="file" name="photo" accept="image/png,image/jpeg,image/gif,image/webp" required><span>Choose photo</span></label>
+        <button type="submit">Upload photo ↗</button>
+      </form>
+    </section>
+
+    <section class="gallery-heading">
+      <div><p class="eyebrow">YOUR COLLECTION</p><h2>Photo gallery</h2></div>
+      <span class="count">{{ photos|length }} photo{% if photos|length != 1 %}s{% endif %}</span>
+    </section>
+
+    {% if photos %}
+      <section class="gallery">
+        {% for photo in photos %}
+          <article class="photo-card">
+            {% if photo.url %}
+              <a href="{{ photo.url }}" target="_blank" rel="noopener"><img src="{{ photo.url }}" alt="{{ photo.name }}"></a>
+            {% else %}
+              <div class="placeholder">🖼️<small>Demo preview unavailable</small></div>
+            {% endif %}
+            <div class="photo-info"><div><strong>{{ photo.name }}</strong><small>{{ photo.date }} · {{ (photo.size / 1024)|round(1) }} KB</small></div>
+              {% if aws_configured %}
+                <form action="{{ url_for('delete') }}" method="post" onsubmit="return confirm('Delete this photo?')">
+                  <input type="hidden" name="key" value="{{ photo.key }}"><button class="delete" type="submit" aria-label="Delete photo">×</button>
+                </form>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+    {% else %}
+      <section class="empty"><div class="empty-icon">▧</div><h3>Your gallery is waiting</h3><p>Choose a photo above to add the first item to your collection.</p></section>
+    {% endif %}
+    <footer>Built as a learning project · Flask + Amazon S3</footer>
+  </main>
+</body>
+</html>
